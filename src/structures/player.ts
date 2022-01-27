@@ -3,6 +3,7 @@ import DisTube, {
   DisTubeOptions,
   DisTubeVoiceManager,
   GuildIdResolvable,
+  Queue,
 } from "distube";
 import { client } from "..";
 import { Player } from "../typings/player";
@@ -37,6 +38,16 @@ class ExtendedPlayer implements Player {
     let channel: VoiceBasedChannel = member.voice.channel as VoiceBasedChannel;
 
     await this.distube.play(channel, query);
+  }
+
+  pause(guild: GuildIdResolvable): void {
+    const queue: Queue = this.distube.getQueue(guild) as Queue;
+    queue?.pause();
+  }
+
+  resume(guild: GuildIdResolvable): void {
+    const queue: Queue = this.distube.getQueue(guild) as Queue;
+    queue.resume();
   }
 }
 
