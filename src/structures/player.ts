@@ -57,6 +57,19 @@ class ExtendedPlayer implements Player {
     const queue: Queue = this.distube.getQueue(guild) as Queue;
     queue.resume();
   }
+
+  async clear(guild: GuildIdResolvable): Promise<boolean> {
+    let queue: Queue = this.distube.getQueue(guild) as Queue;
+
+    if (queue) {
+      await queue.stop();
+      queue.delete();
+      this.songs = [];
+
+      return true;
+    }
+    return false;
+  }
 }
 
 export const player: ExtendedPlayer = new ExtendedPlayer();
