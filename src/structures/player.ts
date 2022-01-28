@@ -4,8 +4,10 @@ import DisTube, {
   DisTubeVoiceManager,
   GuildIdResolvable,
   Queue,
+  Song,
 } from "distube";
 import { client } from "..";
+import Helper from "../helpers/helper";
 import { Player } from "../typings/player";
 
 const distubeOptions: DisTubeOptions = {
@@ -16,10 +18,12 @@ const distubeOptions: DisTubeOptions = {
 class ExtendedPlayer implements Player {
   private distube: DisTube;
   private voiceManager: DisTubeVoiceManager;
+  private songs: Song[];
 
   constructor() {
     this.distube = new DisTube(client, distubeOptions);
     this.voiceManager = this.distube.voices;
+    this.songs = [];
   }
 
   joinChannel(member: GuildMember): void {
@@ -34,10 +38,14 @@ class ExtendedPlayer implements Player {
     return false;
   }
 
-  async play(query: string, member: GuildMember) {
+  async play(query: string, member: GuildMember, guild: GuildIdResolvable) {
     let channel: VoiceBasedChannel = member.voice.channel as VoiceBasedChannel;
 
     await this.distube.play(channel, query);
+    const queue: Queue = this.distube.getQueue(guild) as Queue;
+
+    this.songs = Helper.removeDuplicates([...queue.songs] as []);
+    queue.songs = this.songs;
   }
 
   pause(guild: GuildIdResolvable): void {
