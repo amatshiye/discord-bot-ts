@@ -1,5 +1,6 @@
 import { ApplicationCommandOptionData, VoiceBasedChannel } from "discord.js";
-import Checks from "../../helpers/checks";
+import { GuildIdResolvable } from "distube";
+import Helper from "../../helpers/checks";
 import Colors from "../../helpers/colors";
 import Embeds from "../../helpers/embeds";
 import { Command } from "../../structures/command";
@@ -17,12 +18,16 @@ export default new Command({
     },
   ],
   run: async ({ client, interaction, args }) => {
-    if (!Checks.isUserInVC(interaction)) return;
+    if (!Helper.isUserInVC(interaction)) return;
 
     let query: string = args.data[0].value as string;
 
     try {
-      await player.play(query, interaction.member);
+      await player.play(
+        query,
+        interaction.member,
+        interaction.guild as GuildIdResolvable
+      );
 
       return interaction.followUp({
         embeds: [Embeds.createSimpleEmbed("Queue updated! ✅", Colors.success)],

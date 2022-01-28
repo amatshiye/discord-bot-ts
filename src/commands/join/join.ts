@@ -1,6 +1,6 @@
 import { GuildMember, VoiceBasedChannel } from "discord.js";
 import { DisTubeVoiceManager } from "distube";
-import Checks from "../../helpers/checks";
+import Helper from "../../helpers/helper";
 import Colors from "../../helpers/colors";
 import Embeds from "../../helpers/embeds";
 import Gifs from "../../helpers/gifs";
@@ -11,7 +11,7 @@ export default new Command({
   name: "join",
   description: "Summons bot to a voice channel",
   run: async ({ client, interaction }) => {
-    if (!Checks.isUserInVC(interaction)) return;
+    if (!Helper.isUserInVC(interaction)) return;
 
     try {
       player.joinChannel(interaction.member);

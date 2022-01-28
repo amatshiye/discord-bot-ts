@@ -1,5 +1,5 @@
 import { GuildIdResolvable } from "distube";
-import Checks from "../../helpers/checks";
+import Helper from "../../helpers/helper";
 import Colors from "../../helpers/colors";
 import Embeds from "../../helpers/embeds";
 import Gifs from "../../helpers/gifs";
@@ -10,7 +10,7 @@ export default new Command({
   name: "leave",
   description: "You say bye bye",
   run: async ({ client, interaction }) => {
-    if (!Checks.isUserInVC(interaction)) return;
+    if (!Helper.isUserInVC(interaction)) return;
 
     try {
       if (player.leaveChannel(interaction.guild as GuildIdResolvable)) {
