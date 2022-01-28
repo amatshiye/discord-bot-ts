@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionData, VoiceBasedChannel } from "discord.js";
 import { GuildIdResolvable } from "distube";
-import Helper from "../../helpers/checks";
+import Helper from "../../helpers/helper";
 import Colors from "../../helpers/colors";
 import Embeds from "../../helpers/embeds";
 import { Command } from "../../structures/command";
