@@ -30,4 +30,17 @@ export default class Helper {
         .values(),
     ];
   }
+
+  static getCurrentSongIndex(currentSong: Song, songs: Song[]): number {
+    try {
+      const currentSongIndex: number = songs.findIndex((_song) => {
+        return _song.id === currentSong.id;
+      });
+
+      return currentSongIndex;
+    } catch (error) {
+      console.log(`Error: getCurrentSongIndex: ${error}`);
+      return -1;
+    }
+  }
 }
