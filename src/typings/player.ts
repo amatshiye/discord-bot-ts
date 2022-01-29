@@ -8,8 +8,12 @@ export interface Player {
   pause(guild: GuildIdResolvable): void;
   resume(guild: GuildIdResolvable): void;
   clear(guild: GuildIdResolvable): Promise<boolean>;
-  //jump
-  //move
+  jump(
+    position: number,
+    guild: GuildIdResolvable,
+    member: GuildMember
+  ): Promise<void>;
+  move(from: number, to: number): void;
   //skip
   //back
 }
