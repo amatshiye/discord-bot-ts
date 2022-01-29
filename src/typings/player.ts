@@ -14,6 +14,15 @@ export interface Player {
     member: GuildMember
   ): Promise<void>;
   move(from: number, to: number): void;
-  //skip
-  //back
+  skip(guild: GuildIdResolvable, member: GuildMember): Promise<boolean>;
+  back(guild: GuildIdResolvable, member: GuildMember): Promise<boolean>;
+  //forward
+  //help
+  //loop
+  //nowPlaying
+  //queue
+  //rewind
+  //setVolume
+  //subboost
+  //update
 }

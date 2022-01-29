@@ -31,18 +31,22 @@ class ExtendedPlayer implements Player {
     this._playlistUpdated = false;
   }
 
+  //Getting all songs
   get songs(): Song[] {
     return this._songs;
   }
 
+  //Getting current song
   get currentSong(): Song | null {
     return this._currentSong;
   }
 
+  //Getting current state of [_playlistUpdated]
   get playlistUpdated(): boolean {
     return this._playlistUpdated;
   }
 
+  //Updating state of [_playlistUpdated]
   set playlistUpdated(state: boolean) {
     this._playlistUpdated = state;
   }
@@ -127,6 +131,50 @@ class ExtendedPlayer implements Player {
     const tempSong: Song = this._songs.splice(from, 1)[0];
     this._songs.splice(to, 0, tempSong);
     this._playlistUpdated = true;
+  }
+
+  //Goes to the next song on queue
+  async skip(guild: GuildIdResolvable, member: GuildMember): Promise<boolean> {
+    const currentSongIndex: number = Helper.getCurrentSongIndex(
+      this.currentSong as Song,
+      this.songs
+    );
+    const nextSongIndex = currentSongIndex + 1;
+    if (nextSongIndex > this.songs.length - 1) return false;
+
+    let tempSongs = [...this.songs];
+    tempSongs.splice(0, nextSongIndex);
+
+    if (await this.clear(guild)) {
+      let playlist: Playlist = new Playlist(tempSongs, { member: member });
+
+      await this.play(playlist, member, guild);
+      return true;
+    } else {
+      throw "No queue found!";
+    }
+  }
+
+  //Goes 1 point back in queue
+  async back(guild: GuildIdResolvable, member: GuildMember): Promise<boolean> {
+    const currentSongIndex: number = Helper.getCurrentSongIndex(
+      this.currentSong as Song,
+      this.songs
+    );
+    const previousSongIndex = currentSongIndex - 1;
+    if (previousSongIndex < 0) return false;
+
+    let tempSongs = [...this.songs];
+    tempSongs.splice(0, previousSongIndex);
+
+    if (await this.clear(guild)) {
+      let playlist: Playlist = new Playlist(tempSongs, { member: member });
+
+      await this.play(playlist, member, guild);
+      return true;
+    } else {
+      throw "No queue found!";
+    }
   }
 }
 
