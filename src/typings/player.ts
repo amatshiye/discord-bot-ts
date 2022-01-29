@@ -17,12 +17,12 @@ export interface Player {
   skip(guild: GuildIdResolvable, member: GuildMember): Promise<boolean>;
   back(guild: GuildIdResolvable, member: GuildMember): Promise<boolean>;
   //forward
-  //help
-  //loop
-  //nowPlaying
-  //queue
   //rewind
+  //nowPlaying
   //setVolume
   //subboost
+  //help
+  //queue
+  //loop
   //update
 }
