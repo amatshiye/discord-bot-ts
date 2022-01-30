@@ -176,6 +176,46 @@ class ExtendedPlayer implements Player {
       throw "No queue found!";
     }
   }
+
+  //Seek to a position in a song
+  private async seek(queue: Queue, seconds: number): Promise<void> {
+    if (seconds < 0) {
+      await queue.seek(0);
+      return;
+    }
+
+    await queue.seek(seconds);
+  }
+
+  //Go forward in[seonds] a song
+  async forward(guild: GuildIdResolvable, seconds: number): Promise<void> {
+    let queue: Queue = this._distube.getQueue(guild) as Queue;
+
+    const secondsToSeek: number = queue.currentTime + seconds;
+    await this.seek(queue, secondsToSeek);
+  }
+
+  //Go back in [seconds] in a song
+  async rewind(guild: GuildIdResolvable, seconds: number): Promise<void> {
+    let queue: Queue = this._distube.getQueue(guild) as Queue;
+
+    const secondsToSeek: number = queue.currentTime - seconds;
+    await this.seek(queue, secondsToSeek);
+  }
+
+  //Change player volume
+  setVolume(guild: GuildIdResolvable, amount: number): void {
+    let queue: Queue = this._distube.getQueue(guild) as Queue;
+    if (amount < 0) queue.setVolume(0);
+    else if (amount > 100) queue.setVolume(100);
+    else queue.setVolume(amount);
+  }
+
+  //Turns subboost [on|off]
+  subboost(guild: GuildIdResolvable, state: boolean): void {
+    let queue: Queue = this._distube.getQueue(guild) as Queue;
+    queue.setFilter(state === true ? "subboost" : false);
+  }
 }
 
 export const player: ExtendedPlayer = new ExtendedPlayer();

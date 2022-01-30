@@ -16,11 +16,10 @@ export interface Player {
   move(from: number, to: number): void;
   skip(guild: GuildIdResolvable, member: GuildMember): Promise<boolean>;
   back(guild: GuildIdResolvable, member: GuildMember): Promise<boolean>;
-  //forward
-  //rewind
-  //nowPlaying
-  //setVolume
-  //subboost
+  forward(guild: GuildIdResolvable, seconds: number): Promise<void>;
+  rewind(guild: GuildIdResolvable, seconds: number): Promise<void>;
+  setVolume(guild: GuildIdResolvable, amount: number): void;
+  subboost(guild:GuildIdResolvable, state: boolean): void;
   //help
   //queue
   //loop
