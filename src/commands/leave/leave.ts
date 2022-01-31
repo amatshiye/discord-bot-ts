@@ -4,7 +4,7 @@ import Colors from "../../helpers/colors";
 import Embeds from "../../helpers/embeds";
 import Gifs from "../../helpers/gifs";
 import { Command } from "../../structures/command";
-import { player } from "../../structures/player";
+import { player } from "../../core/player";
 
 export default new Command({
   name: "leave",
