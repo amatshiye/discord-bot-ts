@@ -21,11 +21,40 @@ export default class ExtendedPlayerQueue implements PlayerQueue {
       }
     }
 
-    return queuePageFirstIndex;
+    if (queuePageFirstIndex < 0) {
+      return 0;
+    } else if (queuePageFirstIndex > player.songs.length) {
+      return player.songs.length;
+    } else return queuePageFirstIndex;
   }
 
   displayQueue(): string {
-    throw new Error("Method not implemented.");
+    let queuePageFirstIndex: number = this.findQueuePageIndex();
+    const tempSongs: Song[] = [...player.songs].splice(
+      queuePageFirstIndex > 0 ? queuePageFirstIndex - 1 : queuePageFirstIndex
+    );
+
+    let songNumber: number =
+      queuePageFirstIndex === 0 ? queuePageFirstIndex + 1 : queuePageFirstIndex;
+
+    const songsToDisplay: string[] = tempSongs.map((_song) => {
+      const playEmoji: string = _song.id === player.currentSong?.id ? "🎶" : "";
+      const element = `${songNumber}) ${_song.name} - [${_song.formattedDuration}] ${playEmoji}\n`;
+      songNumber++;
+
+      return element;
+    });
+
+    let queueToDisplay: string = "\n";
+    for (let i = 0; i < songsToDisplay.length; i++) {
+      queueToDisplay += songsToDisplay[i];
+    }
+
+    if (songNumber - 1 === player.songs.length) {
+      queueToDisplay += "\n⬅End of Queue➡";
+    }
+
+    return queueToDisplay;
   }
 
   queueButtons(): MessageActionRow {
