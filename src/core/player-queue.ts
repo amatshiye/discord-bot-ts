@@ -4,13 +4,13 @@ import Helper from "../helpers/helper";
 import { player } from "./player";
 import { Song } from "distube";
 
-export default class ExtendedPlayerQueue implements PlayerQueue {
+class ExtendedPlayerQueue implements PlayerQueue {
   constructor() {}
 
   private findQueuePageIndex(): number {
     let queuePageFirstIndex: number = 0;
     let currentSongIndex: number = Helper.getCurrentSongIndex(
-      player.currentSong as Song,
+      player.currentSong,
       [...player.songs]
     );
 
@@ -31,7 +31,8 @@ export default class ExtendedPlayerQueue implements PlayerQueue {
   displayQueue(): string {
     let queuePageFirstIndex: number = this.findQueuePageIndex();
     const tempSongs: Song[] = [...player.songs].splice(
-      queuePageFirstIndex > 0 ? queuePageFirstIndex - 1 : queuePageFirstIndex
+      queuePageFirstIndex > 0 ? queuePageFirstIndex - 1 : queuePageFirstIndex,
+      10
     );
 
     let songNumber: number =
@@ -78,3 +79,5 @@ export default class ExtendedPlayerQueue implements PlayerQueue {
     );
   }
 }
+
+export const queue: ExtendedPlayerQueue = new ExtendedPlayerQueue();

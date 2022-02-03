@@ -31,10 +31,10 @@ export default class Helper {
     ];
   }
 
-  static getCurrentSongIndex(currentSong: Song, songs: Song[]): number {
+  static getCurrentSongIndex(currentSong: Song | null, songs: Song[]): number {
     try {
       const currentSongIndex: number = songs.findIndex((_song) => {
-        return _song.id === currentSong.id;
+        return _song?.id === currentSong?.id;
       });
 
       return currentSongIndex;

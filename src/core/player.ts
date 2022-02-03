@@ -75,6 +75,8 @@ class ExtendedPlayer implements Player {
 
     await this._distube.play(channel, query);
     const queue: Queue = this._distube.getQueue(guild) as Queue;
+    
+    if (this._songs.length < 1) this._currentSong = queue.songs[0];
 
     if (typeof query === "string") {
       this._songs = Helper.removeDuplicates([...queue.songs] as []);
