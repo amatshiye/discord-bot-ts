@@ -1,3 +1,4 @@
+import { Message } from "discord.js";
 import { queue } from "../../core/player-queue";
 import Colors from "../../helpers/colors";
 import Embeds from "../../helpers/embeds";
@@ -12,15 +13,25 @@ export default new Command({
     try {
       let queueToDisplay: string = queue.displayQueue();
 
-      return interaction.followUp({
-        embeds: [
-          Embeds.createSimpleEmbed(
-            `\`\`\`elm${queueToDisplay}\`\`\``,
-            Colors.queue
-          ),
-        ],
-        components: [queue.queueButtons()],
-      });
+      return interaction
+        .followUp({
+          embeds: [
+            Embeds.createSimpleEmbed(
+              `\`\`\`elm${queueToDisplay}\`\`\``,
+              Colors.queue
+            ),
+          ],
+          components: [queue.queueButtons()],
+        })
+        .then((message) => {
+          setTimeout(() => {
+            try {
+              (message as Message).delete();
+            } catch (error) {
+              console.log(`Error: Queue Command: ${error}`);
+            }
+          }, 300000);
+        });
     } catch (error) {
       return interaction.followUp({
         embeds: [

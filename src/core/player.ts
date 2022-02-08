@@ -1,6 +1,5 @@
-import { GuildMember, VoiceBasedChannel } from "discord.js";
+import { GuildMember, TextBasedChannel, VoiceBasedChannel } from "discord.js";
 import DisTube, {
-  DisTubeOptions,
   DisTubeVoiceManager,
   GuildIdResolvable,
   Playlist,
@@ -11,24 +10,35 @@ import { client } from "..";
 import Helper from "../helpers/helper";
 import { Player } from "../typings/player";
 
-const distubeOptions: DisTubeOptions = {
-  leaveOnStop: false,
-  leaveOnEmpty: false,
-};
-
 class ExtendedPlayer implements Player {
   private _distube: DisTube;
   private _voiceManager: DisTubeVoiceManager;
   private _songs: Song[];
   private _currentSong: Song | null;
+  private _previousSong: Song | null;
   private _playlistUpdated: boolean;
+  private _currentQuery: string | null;
+  private _textChannel: TextBasedChannel | null;
 
-  constructor() {
-    this._distube = new DisTube(client, distubeOptions);
+  constructor(distube: DisTube) {
+    this._distube = distube;
     this._voiceManager = this._distube.voices;
     this._songs = [];
     this._currentSong = null;
+    this._previousSong = null;
     this._playlistUpdated = false;
+    this._currentQuery = null;
+    this._textChannel = null;
+  }
+
+  //get current text channel
+  get currentTextChannel(): TextBasedChannel | null {
+    return this._textChannel;
+  }
+
+  //get current query
+  get currentQuery(): string | null {
+    return this._currentQuery;
   }
 
   //Getting all songs
@@ -41,6 +51,10 @@ class ExtendedPlayer implements Player {
     return this._currentSong;
   }
 
+  get previousSong(): Song | null {
+    return this._previousSong;
+  }
+
   //Getting current state of [_playlistUpdated]
   get playlistUpdated(): boolean {
     return this._playlistUpdated;
@@ -49,6 +63,15 @@ class ExtendedPlayer implements Player {
   //Updating state of [_playlistUpdated]
   set playlistUpdated(state: boolean) {
     this._playlistUpdated = state;
+  }
+
+  //Set current playing song
+  set updateCurrentSong(song: Song) {
+    this._currentSong = song;
+  }
+
+  set updatePreviousSong(song: Song) {
+    this._previousSong = song;
   }
 
   //Bot joins channel
@@ -69,18 +92,21 @@ class ExtendedPlayer implements Player {
   async play(
     query: string | Playlist,
     member: GuildMember,
-    guild: GuildIdResolvable
+    guild: GuildIdResolvable,
+    textChannel?: TextBasedChannel
   ) {
     let channel: VoiceBasedChannel = member.voice.channel as VoiceBasedChannel;
+    this._currentQuery = typeof query === "string" ? query : null;
+    this._textChannel = typeof textChannel === "undefined" ? null : textChannel;
 
     await this._distube.play(channel, query);
     const queue: Queue = this._distube.getQueue(guild) as Queue;
-    
+
     if (this._songs.length < 1) this._currentSong = queue.songs[0];
 
     if (typeof query === "string") {
       this._songs = Helper.removeDuplicates([...queue.songs] as []);
-      queue.songs = this._songs;
+      queue.songs = [...this._songs];
     }
   }
 
@@ -220,4 +246,4 @@ class ExtendedPlayer implements Player {
   }
 }
 
-export const player: ExtendedPlayer = new ExtendedPlayer();
+export const player: ExtendedPlayer = new ExtendedPlayer(client.distube);

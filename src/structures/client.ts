@@ -8,14 +8,18 @@ import { CommandType } from "../typings/command";
 import glob from "glob";
 import { promisify } from "util";
 import { RegisterCommandsOptions } from "../typings/client";
-import { Event } from "./event";
-import DisTube, { DisTubeOptions } from "distube";
+import { Event, PlayerEvent } from "./event";
+import DisTube, { DisTubeEvents, DisTubeOptions } from "distube";
 
 const globPromise = promisify(glob);
 
 const distubeOptions: DisTubeOptions = {
   leaveOnStop: false,
   leaveOnEmpty: false,
+  emitNewSongOnly: false,
+  leaveOnFinish: false,
+  savePreviousSongs: false,
+  youtubeDL: false,
 };
 
 export class ExtendedClient extends Client {
@@ -70,10 +74,23 @@ export class ExtendedClient extends Client {
     });
 
     //Event
-    const eventFiles = await globPromise(`${__dirname}/../events/*{ts.,js}`);
+    const eventFiles = await globPromise(
+      `${__dirname}/../events/client-events/*{ts.,js}`
+    );
     eventFiles.forEach(async (filePath) => {
       const event: Event<keyof ClientEvents> = await this.importFile(filePath);
       this.on(event.event, event.run);
+    });
+
+    //PlayerEvent
+    const playerEventFiles = await globPromise(
+      `${__dirname}/../events/player-events/*{ts.,js}`
+    );
+    playerEventFiles.forEach(async (filePath) => {
+      const playerEvent: PlayerEvent<keyof DisTubeEvents> =
+        await this.importFile(filePath);
+      console.log(playerEvent);
+      this.distube.on(playerEvent.event, playerEvent.run);
     });
   }
 }

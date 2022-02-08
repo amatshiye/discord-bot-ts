@@ -1,10 +1,24 @@
-import { GuildMember } from "discord.js";
-import { GuildIdResolvable } from "distube";
+import { GuildMember, TextBasedChannel } from "discord.js";
+import { GuildIdResolvable, Song } from "distube";
 
 export interface Player {
+  get currentTextChannel(): TextBasedChannel | null;
+  get currentQuery(): string | null;
+  get songs(): Song[];
+  get currentSong(): Song | null;
+  get previousSong(): Song | null;
+  get playlistUpdated(): boolean;
+  set playlistUpdated(state: boolean);
+  set updateCurrentSong(song: Song);
+  set updatePreviousSong(song: Song);
   joinChannel(member: GuildMember): void;
   leaveChannel(guild: GuildIdResolvable): boolean;
-  play(query: string, member: GuildMember, guild: GuildIdResolvable): void;
+  play(
+    query: string,
+    member: GuildMember,
+    guild: GuildIdResolvable,
+    textChannel?: TextBasedChannel
+  ): void;
   pause(guild: GuildIdResolvable): void;
   resume(guild: GuildIdResolvable): void;
   clear(guild: GuildIdResolvable): Promise<boolean>;
@@ -19,7 +33,7 @@ export interface Player {
   forward(guild: GuildIdResolvable, seconds: number): Promise<void>;
   rewind(guild: GuildIdResolvable, seconds: number): Promise<void>;
   setVolume(guild: GuildIdResolvable, amount: number): void;
-  subboost(guild:GuildIdResolvable, state: boolean): void;
+  subboost(guild: GuildIdResolvable, state: boolean): void;
   //help
   //queue
   //loop

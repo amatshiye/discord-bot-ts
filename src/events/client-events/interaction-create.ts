@@ -1,7 +1,8 @@
 import { CommandInteractionOptionResolver, Interaction } from "discord.js";
-import { client } from "..";
-import { Event } from "../structures/event";
-import { ExtendedInteraction } from "../typings/command";
+import { client } from "../..";
+import { queue } from "../../core/player-queue";
+import { Event } from "../../structures/event";
+import { ExtendedInteraction } from "../../typings/command";
 
 export default new Event(
   "interactionCreate",
@@ -18,6 +19,14 @@ export default new Event(
         client,
         interaction: interaction as ExtendedInteraction,
       });
+    }
+
+    //Button input commands
+    if (interaction.isButton()){
+      await interaction.deferReply();
+      const button: string = interaction.customId;
+
+      queue.queueButtonHandler(interaction, button);
     }
   }
 );
