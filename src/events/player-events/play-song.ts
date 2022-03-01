@@ -1,4 +1,4 @@
-import { Message, TextBasedChannel, TextChannel } from "discord.js";
+import { Message, TextBasedChannel } from "discord.js";
 import { Queue, Song } from "distube";
 import { player } from "../../core/player";
 import Embeds from "../../helpers/embeds";
@@ -15,6 +15,7 @@ export default new PlayerEvent("playSong", (queue: Queue, song: Song) => {
       .then((message) => {
         setTimeout(() => {
           try {
+            console.log("Message to delete: ", message);
             (message as Message).delete();
           } catch (error) {
             console.log("Failed to delete queue updated message.");

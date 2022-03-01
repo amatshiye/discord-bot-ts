@@ -11,6 +11,7 @@ export interface Player {
   set playlistUpdated(state: boolean);
   set updateCurrentSong(song: Song);
   set updatePreviousSong(song: Song);
+
   joinChannel(member: GuildMember): void;
   leaveChannel(guild: GuildIdResolvable): boolean;
   play(
@@ -25,7 +26,8 @@ export interface Player {
   jump(
     position: number,
     guild: GuildIdResolvable,
-    member: GuildMember
+    member: GuildMember,
+    textChannel?: TextBasedChannel
   ): Promise<void>;
   move(from: number, to: number): void;
   skip(guild: GuildIdResolvable, member: GuildMember): Promise<boolean>;

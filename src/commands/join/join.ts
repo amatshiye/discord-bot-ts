@@ -1,5 +1,3 @@
-import { GuildMember, VoiceBasedChannel } from "discord.js";
-import { DisTubeVoiceManager } from "distube";
 import Helper from "../../helpers/helper";
 import Colors from "../../helpers/colors";
 import Embeds from "../../helpers/embeds";
@@ -9,7 +7,7 @@ import { player } from "../../core/player";
 export default new Command({
   name: "join",
   description: "Summons bot to a voice channel",
-  run: async ({ client, interaction }) => {
+  run: async ({  interaction }) => {
     if (!Helper.isUserInVC(interaction)) return;
 
     try {
@@ -21,7 +19,7 @@ export default new Command({
       interaction.followUp({
         embeds: [
           Embeds.createSimpleEmbed(
-            `An error occured.Failed to join voice channel: ${interaction?.member?.voice?.channel?.id}`,
+            `An error occured. Failed to join voice channel: ${interaction?.member?.voice?.channel?.id}`,
             Colors.error
           ),
         ],

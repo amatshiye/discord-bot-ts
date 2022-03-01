@@ -18,7 +18,6 @@ const distubeOptions: DisTubeOptions = {
   leaveOnEmpty: false,
   emitNewSongOnly: false,
   leaveOnFinish: false,
-  savePreviousSongs: false,
   youtubeDL: false,
 };
 

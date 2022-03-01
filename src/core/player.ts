@@ -9,6 +9,7 @@ import DisTube, {
 import { client } from "..";
 import Helper from "../helpers/helper";
 import { Player } from "../typings/player";
+import { QueueDeleteReason as QueueDeleteReason } from "../helpers/queue-delete-reason";
 
 class ExtendedPlayer implements Player {
   private _distube: DisTube;
@@ -19,6 +20,7 @@ class ExtendedPlayer implements Player {
   private _playlistUpdated: boolean;
   private _currentQuery: string | null;
   private _textChannel: TextBasedChannel | null;
+  private _queueDeleteReason: QueueDeleteReason[];
 
   constructor(distube: DisTube) {
     this._distube = distube;
@@ -29,6 +31,7 @@ class ExtendedPlayer implements Player {
     this._playlistUpdated = false;
     this._currentQuery = null;
     this._textChannel = null;
+    this._queueDeleteReason = [QueueDeleteReason.none];
   }
 
   //get current text channel
@@ -58,6 +61,16 @@ class ExtendedPlayer implements Player {
   //Getting current state of [_playlistUpdated]
   get playlistUpdated(): boolean {
     return this._playlistUpdated;
+  }
+
+  //Getting queue delete reason
+  get queueDeleteReason(): QueueDeleteReason[] {
+    return this._queueDeleteReason;
+  }
+
+  //Set queue delete reason
+  set queueDeleteReason(reason: QueueDeleteReason[]) {
+    this.queueDeleteReason.push(...reason);
   }
 
   //Updating state of [_playlistUpdated]
@@ -122,15 +135,29 @@ class ExtendedPlayer implements Player {
     queue.resume();
   }
 
-  //Clears the queue
   async clear(guild: GuildIdResolvable): Promise<boolean> {
+    try {
+      let queue: Queue = this._distube.getQueue(guild) as Queue;
+
+      if (queue) {
+        await this.deleteQueue(guild);
+      }
+      this._queueDeleteReason.push(QueueDeleteReason.clearingQueue);
+      this._songs = [];
+      this._currentSong = null;
+    } catch (error) {
+      throw "Failed to clear queue";
+    }
+
+    return true;
+  }
+
+  //deletes current queue
+  private async deleteQueue(guild: GuildIdResolvable): Promise<boolean> {
     let queue: Queue = this._distube.getQueue(guild) as Queue;
 
     if (queue) {
-      await queue.stop();
       queue.delete();
-      this._songs = [];
-
       return true;
     }
     return false;
@@ -140,15 +167,18 @@ class ExtendedPlayer implements Player {
   async jump(
     position: number,
     guild: GuildIdResolvable,
-    member: GuildMember
+    member: GuildMember,
+    textChannel?: TextBasedChannel
   ): Promise<void> {
-    if (await this.clear(guild)) {
+    this._queueDeleteReason.push(QueueDeleteReason.jumpedSongs);
+
+    if (await this.deleteQueue(guild)) {
       let tempSongs: Song[] = [...this._songs];
       tempSongs.splice(0, position);
       this._currentSong = tempSongs[0];
 
       let playlist: Playlist = new Playlist(tempSongs, { member: member });
-      await this.play(playlist, member, guild);
+      await this.play(playlist, member, guild, textChannel);
     } else {
       throw "No queue found!";
     }
@@ -163,45 +193,23 @@ class ExtendedPlayer implements Player {
 
   //Goes to the next song on queue
   async skip(guild: GuildIdResolvable, member: GuildMember): Promise<boolean> {
-    const currentSongIndex: number = Helper.getCurrentSongIndex(
-      this.currentSong as Song,
-      this.songs
-    );
-    const nextSongIndex = currentSongIndex + 1;
-    if (nextSongIndex > this.songs.length - 1) return false;
-
-    let tempSongs = [...this.songs];
-    tempSongs.splice(0, nextSongIndex);
-
-    if (await this.clear(guild)) {
-      let playlist: Playlist = new Playlist(tempSongs, { member: member });
-
-      await this.play(playlist, member, guild);
+    try {
+      let queue: Queue = this._distube.getQueue(guild) as Queue;
+      await queue.skip();
       return true;
-    } else {
-      throw "No queue found!";
+    } catch (error) {
+      throw "No queue found";
     }
   }
 
   //Goes 1 point back in queue
   async back(guild: GuildIdResolvable, member: GuildMember): Promise<boolean> {
-    const currentSongIndex: number = Helper.getCurrentSongIndex(
-      this.currentSong as Song,
-      this.songs
-    );
-    const previousSongIndex = currentSongIndex - 1;
-    if (previousSongIndex < 0) return false;
-
-    let tempSongs = [...this.songs];
-    tempSongs.splice(0, previousSongIndex);
-
-    if (await this.clear(guild)) {
-      let playlist: Playlist = new Playlist(tempSongs, { member: member });
-
-      await this.play(playlist, member, guild);
+    try {
+      let queue: Queue = this._distube.getQueue(guild) as Queue;
+      await queue.previous();
       return true;
-    } else {
-      throw "No queue found!";
+    } catch (error) {
+      throw "No queue found";
     }
   }
 
