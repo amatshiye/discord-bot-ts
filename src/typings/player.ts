@@ -1,41 +1,31 @@
-import { GuildMember, TextBasedChannel } from "discord.js";
-import { GuildIdResolvable, Song } from "distube";
+import {  Song } from "distube";
+import { InteractionData } from "./interaction-data";
 
 export interface Player {
-  get currentTextChannel(): TextBasedChannel | null;
   get currentQuery(): string | null;
   get songs(): Song[];
   get currentSong(): Song | null;
   get previousSong(): Song | null;
   get playlistUpdated(): boolean;
+  get interactionData(): InteractionData | null;
   set playlistUpdated(state: boolean);
   set updateCurrentSong(song: Song);
   set updatePreviousSong(song: Song);
 
-  joinChannel(member: GuildMember): void;
-  leaveChannel(guild: GuildIdResolvable): boolean;
-  play(
-    query: string,
-    member: GuildMember,
-    guild: GuildIdResolvable,
-    textChannel?: TextBasedChannel
-  ): void;
-  pause(guild: GuildIdResolvable): void;
-  resume(guild: GuildIdResolvable): void;
-  clear(guild: GuildIdResolvable): Promise<boolean>;
-  jump(
-    position: number,
-    guild: GuildIdResolvable,
-    member: GuildMember,
-    textChannel?: TextBasedChannel
-  ): Promise<void>;
-  move(from: number, to: number): void;
-  skip(guild: GuildIdResolvable, member: GuildMember): Promise<boolean>;
-  back(guild: GuildIdResolvable, member: GuildMember): Promise<boolean>;
-  forward(guild: GuildIdResolvable, seconds: number): Promise<void>;
-  rewind(guild: GuildIdResolvable, seconds: number): Promise<void>;
-  setVolume(guild: GuildIdResolvable, amount: number): void;
-  subboost(guild: GuildIdResolvable, state: boolean): void;
+  joinChannel(data: InteractionData): void;
+  leaveChannel(data: InteractionData): boolean;
+  play(query: string, data: InteractionData): void;
+  pause(data: InteractionData): void;
+  resume(data: InteractionData): void;
+  clear(data: InteractionData): Promise<boolean>;
+  jump(position: number, data: InteractionData): Promise<void>;
+  move(from: number, to: number, data: InteractionData): void;
+  skip(data: InteractionData): Promise<boolean>;
+  back(data: InteractionData): Promise<boolean>;
+  forward(data: InteractionData, seconds: number): Promise<void>;
+  rewind(data: InteractionData, seconds: number): Promise<void>;
+  setVolume(data: InteractionData, amount: number): void;
+  subboost(data: InteractionData, state: boolean): void;
   //help
   //queue
   //loop

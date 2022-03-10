@@ -5,6 +5,7 @@ import Embeds from "../../helpers/embeds";
 import Gifs from "../../helpers/gifs";
 import { Command } from "../../structures/command";
 import { player } from "../../core/player";
+import { InteractionData } from "../../typings/interaction-data";
 
 export default new Command({
   name: "leave",
@@ -12,8 +13,14 @@ export default new Command({
   run: async ({ client, interaction }) => {
     if (!Helper.isUserInVC(interaction)) return;
 
+    let interactionData: InteractionData = {
+      guild: interaction.guild as GuildIdResolvable,
+      textChannel: interaction.channel,
+      member: interaction.member,
+    };
+
     try {
-      if (player.leaveChannel(interaction.guild as GuildIdResolvable)) {
+      if (player.leaveChannel(interactionData)) {
         return interaction.followUp({
           embeds: [
             Embeds.createGifEmbed(

@@ -1,4 +1,8 @@
+import { GuildMember } from "discord.js";
+import { GuildIdResolvable } from "distube";
+import { type } from "os";
 import { Command } from "../../structures/command";
+import { InteractionData } from "../../typings/interaction-data";
 
 export default new Command({
   name: "move",
@@ -18,6 +22,19 @@ export default new Command({
     },
   ],
   run: async ({ interaction, args }) => {
+    try {
+      let from: number = Number(args.data[0].value);
+      let to: number = Number(args.data[1].value);
+
+      let interactionData: InteractionData = {
+        guild: interaction.guild as GuildIdResolvable,
+        textChannel: interaction.channel,
+        member: interaction.member,
+      };
+    } catch (error) {
+      console.log(`Error: Move Command: ${error}`);
+    }
+
     interaction.followUp("Move function");
   },
 });

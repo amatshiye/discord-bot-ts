@@ -5,6 +5,7 @@ import Colors from "../../helpers/colors";
 import Embeds from "../../helpers/embeds";
 import Helper from "../../helpers/helper";
 import { Command } from "../../structures/command";
+import { InteractionData } from "../../typings/interaction-data";
 
 export default new Command({
   name: "jump",
@@ -23,15 +24,13 @@ export default new Command({
 
       let option: string = args.data[0].value as string;
       let trackNumber: number = Number(option) - 1;
-      let textChannel: TextBasedChannel | undefined =
-        interaction.channel != null ? interaction.channel : undefined;
+      let interactionData: InteractionData = {
+        guild: interaction.guild as GuildIdResolvable,
+        textChannel: interaction.channel,
+        member: interaction.member,
+      };
 
-      await player.jump(
-        trackNumber,
-        interaction.guild as GuildIdResolvable,
-        interaction.member,
-        textChannel
-      );
+      await player.jump(trackNumber, interactionData);
       interaction
         .followUp({
           embeds: [

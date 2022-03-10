@@ -5,6 +5,7 @@ import Embeds from "../../helpers/embeds";
 import { Command } from "../../structures/command";
 import { player } from "../../core/player";
 import { Message, TextBasedChannel } from "discord.js";
+import { InteractionData } from "../../typings/interaction-data";
 
 export default new Command({
   name: "play",
@@ -21,16 +22,14 @@ export default new Command({
     if (!Helper.isUserInVC(interaction)) return;
 
     let query: string = args.data[0].value as string;
-    let textChannel: TextBasedChannel | undefined =
-      interaction.channel != null ? interaction.channel : undefined;
+    let interactionData: InteractionData = {
+      guild: interaction.guild as GuildIdResolvable,
+      textChannel: interaction.channel,
+      member: interaction.member,
+    };
 
     try {
-      await player.play(
-        query,
-        interaction.member,
-        interaction.guild as GuildIdResolvable,
-        textChannel
-      );
+      await player.play(query, interactionData);
 
       return interaction
         .followUp({

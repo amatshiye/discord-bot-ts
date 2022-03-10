@@ -16,7 +16,7 @@
   "dependencies": {
     "@discordjs/opus": "^0.7.0",
     "@distube/youtube-dl": "^2.2.4",
-    "@distube/ytdl-core": "^4.9.4",
+    "@distube/ytdl-core": "^4.10.0",
     "@distube/ytpl": "^1.1.1",
     "@distube/ytsr": "^1.1.5",
     "discord-voice": "^2.0.6",

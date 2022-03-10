@@ -10,6 +10,7 @@ import { client } from "..";
 import Helper from "../helpers/helper";
 import { Player } from "../typings/player";
 import { QueueDeleteReason as QueueDeleteReason } from "../helpers/queue-delete-reason";
+import { InteractionData } from "../typings/interaction-data";
 
 class ExtendedPlayer implements Player {
   private _distube: DisTube;
@@ -21,6 +22,7 @@ class ExtendedPlayer implements Player {
   private _currentQuery: string | null;
   private _textChannel: TextBasedChannel | null;
   private _queueDeleteReason: QueueDeleteReason[];
+  private _interactionData: InteractionData | null;
 
   constructor(distube: DisTube) {
     this._distube = distube;
@@ -32,6 +34,7 @@ class ExtendedPlayer implements Player {
     this._currentQuery = null;
     this._textChannel = null;
     this._queueDeleteReason = [QueueDeleteReason.none];
+    this._interactionData = null;
   }
 
   //get current text channel
@@ -68,6 +71,10 @@ class ExtendedPlayer implements Player {
     return this._queueDeleteReason;
   }
 
+  get interactionData(): InteractionData | null {
+    return this._interactionData;
+  }
+
   //Set queue delete reason
   set queueDeleteReason(reason: QueueDeleteReason[]) {
     this.queueDeleteReason.push(...reason);
@@ -88,32 +95,33 @@ class ExtendedPlayer implements Player {
   }
 
   //Bot joins channel
-  joinChannel(member: GuildMember): void {
-    this._voiceManager.join(member.voice.channel as VoiceBasedChannel);
+  joinChannel(data: InteractionData): void {
+    this._interactionData = data;
+
+    this._voiceManager.join(data.member.voice.channel as VoiceBasedChannel);
   }
 
   //Bot leave channel
-  leaveChannel(guild: GuildIdResolvable): boolean {
+  leaveChannel(data: InteractionData): boolean {
+    this._interactionData = data;
+
     if (this._voiceManager.collection.size > 0) {
-      this._voiceManager.leave(guild);
+      this._voiceManager.leave(data.guild);
       return true;
     }
     return false;
   }
 
   //Plays a query(link|text) or playlist
-  async play(
-    query: string | Playlist,
-    member: GuildMember,
-    guild: GuildIdResolvable,
-    textChannel?: TextBasedChannel
-  ) {
-    let channel: VoiceBasedChannel = member.voice.channel as VoiceBasedChannel;
+  async play(query: string | Playlist, data: InteractionData) {
+    let channel: VoiceBasedChannel = data.member.voice
+      .channel as VoiceBasedChannel;
     this._currentQuery = typeof query === "string" ? query : null;
-    this._textChannel = typeof textChannel === "undefined" ? null : textChannel;
+    this._textChannel =
+      typeof data.textChannel === "undefined" ? null : data.textChannel;
 
     await this._distube.play(channel, query);
-    const queue: Queue = this._distube.getQueue(guild) as Queue;
+    const queue: Queue = this._distube.getQueue(data.guild) as Queue;
 
     if (this._songs.length < 1) this._currentSong = queue.songs[0];
 
@@ -124,23 +132,29 @@ class ExtendedPlayer implements Player {
   }
 
   //For pausing current song
-  pause(guild: GuildIdResolvable): void {
-    const queue: Queue = this._distube.getQueue(guild) as Queue;
+  pause(data: InteractionData): void {
+    const queue: Queue = this._distube.getQueue(data.guild) as Queue;
+    this._interactionData = data;
+
     queue?.pause();
   }
 
   //Resuming current song
-  resume(guild: GuildIdResolvable): void {
-    const queue: Queue = this._distube.getQueue(guild) as Queue;
+  resume(data: InteractionData): void {
+    const queue: Queue = this._distube.getQueue(data.guild) as Queue;
+    this._interactionData = data;
+
     queue.resume();
   }
 
-  async clear(guild: GuildIdResolvable): Promise<boolean> {
+  async clear(data: InteractionData): Promise<boolean> {
+    this._interactionData = data;
+
     try {
-      let queue: Queue = this._distube.getQueue(guild) as Queue;
+      let queue: Queue = this._distube.getQueue(data.guild) as Queue;
 
       if (queue) {
-        await this.deleteQueue(guild);
+        await this.deleteQueue(data.guild);
       }
       this._queueDeleteReason.push(QueueDeleteReason.clearingQueue);
       this._songs = [];
@@ -164,37 +178,38 @@ class ExtendedPlayer implements Player {
   }
 
   //Jumps to a song in queue
-  async jump(
-    position: number,
-    guild: GuildIdResolvable,
-    member: GuildMember,
-    textChannel?: TextBasedChannel
-  ): Promise<void> {
+  async jump(position: number, data: InteractionData): Promise<void> {
     this._queueDeleteReason.push(QueueDeleteReason.jumpedSongs);
+    this._interactionData = data;
 
-    if (await this.deleteQueue(guild)) {
+    if (await this.deleteQueue(data.guild)) {
       let tempSongs: Song[] = [...this._songs];
       tempSongs.splice(0, position);
       this._currentSong = tempSongs[0];
 
-      let playlist: Playlist = new Playlist(tempSongs, { member: member });
-      await this.play(playlist, member, guild, textChannel);
+      let playlist: Playlist = new Playlist(tempSongs, { member: data.member });
+      await this.play(playlist, data);
     } else {
       throw "No queue found!";
     }
   }
 
   //Moves a song on the queue
-  move(from: number, to: number): void {
+  move(from: number, to: number, data: InteractionData): void {
+    this._queueDeleteReason.push(QueueDeleteReason.movedSongs);
+    this._interactionData = data;
+
     const tempSong: Song = this._songs.splice(from, 1)[0];
     this._songs.splice(to, 0, tempSong);
     this._playlistUpdated = true;
   }
 
   //Goes to the next song on queue
-  async skip(guild: GuildIdResolvable, member: GuildMember): Promise<boolean> {
+  async skip(data: InteractionData): Promise<boolean> {
+    this._interactionData = data;
+
     try {
-      let queue: Queue = this._distube.getQueue(guild) as Queue;
+      let queue: Queue = this._distube.getQueue(data.guild) as Queue;
       await queue.skip();
       return true;
     } catch (error) {
@@ -203,9 +218,11 @@ class ExtendedPlayer implements Player {
   }
 
   //Goes 1 point back in queue
-  async back(guild: GuildIdResolvable, member: GuildMember): Promise<boolean> {
+  async back(data: InteractionData): Promise<boolean> {
+    this._interactionData = data;
+
     try {
-      let queue: Queue = this._distube.getQueue(guild) as Queue;
+      let queue: Queue = this._distube.getQueue(data.guild) as Queue;
       await queue.previous();
       return true;
     } catch (error) {
@@ -224,32 +241,38 @@ class ExtendedPlayer implements Player {
   }
 
   //Go forward in[seonds] a song
-  async forward(guild: GuildIdResolvable, seconds: number): Promise<void> {
-    let queue: Queue = this._distube.getQueue(guild) as Queue;
+  async forward(data: InteractionData, seconds: number): Promise<void> {
+    let queue: Queue = this._distube.getQueue(data.guild) as Queue;
+    this._interactionData = data;
 
     const secondsToSeek: number = queue.currentTime + seconds;
     await this.seek(queue, secondsToSeek);
   }
 
   //Go back in [seconds] in a song
-  async rewind(guild: GuildIdResolvable, seconds: number): Promise<void> {
-    let queue: Queue = this._distube.getQueue(guild) as Queue;
+  async rewind(data: InteractionData, seconds: number): Promise<void> {
+    let queue: Queue = this._distube.getQueue(data.guild) as Queue;
+    this._interactionData = data;
 
     const secondsToSeek: number = queue.currentTime - seconds;
     await this.seek(queue, secondsToSeek);
   }
 
   //Change player volume
-  setVolume(guild: GuildIdResolvable, amount: number): void {
-    let queue: Queue = this._distube.getQueue(guild) as Queue;
+  setVolume(data: InteractionData, amount: number): void {
+    let queue: Queue = this._distube.getQueue(data.guild) as Queue;
+    this._interactionData = data;
+
     if (amount < 0) queue.setVolume(0);
     else if (amount > 100) queue.setVolume(100);
     else queue.setVolume(amount);
   }
 
   //Turns subboost [on|off]
-  subboost(guild: GuildIdResolvable, state: boolean): void {
-    let queue: Queue = this._distube.getQueue(guild) as Queue;
+  subboost(data: InteractionData, state: boolean): void {
+    let queue: Queue = this._distube.getQueue(data.guild) as Queue;
+    this._interactionData = data;
+
     queue.setFilter(state === true ? "subboost" : false);
   }
 }
