@@ -20,7 +20,6 @@ class ExtendedPlayer implements Player {
   private _previousSong: Song | null;
   private _playlistUpdated: boolean;
   private _currentQuery: string | null;
-  private _textChannel: TextBasedChannel | null;
   private _queueDeleteReason: QueueDeleteReason[];
   private _interactionData: InteractionData | null;
 
@@ -32,14 +31,8 @@ class ExtendedPlayer implements Player {
     this._previousSong = null;
     this._playlistUpdated = false;
     this._currentQuery = null;
-    this._textChannel = null;
     this._queueDeleteReason = [QueueDeleteReason.none];
     this._interactionData = null;
-  }
-
-  //get current text channel
-  get currentTextChannel(): TextBasedChannel | null {
-    return this._textChannel;
   }
 
   //get current query
@@ -117,8 +110,6 @@ class ExtendedPlayer implements Player {
     let channel: VoiceBasedChannel = data.member.voice
       .channel as VoiceBasedChannel;
     this._currentQuery = typeof query === "string" ? query : null;
-    this._textChannel =
-      typeof data.textChannel === "undefined" ? null : data.textChannel;
 
     await this._distube.play(channel, query);
     const queue: Queue = this._distube.getQueue(data.guild) as Queue;
