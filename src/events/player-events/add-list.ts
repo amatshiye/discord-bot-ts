@@ -8,7 +8,7 @@ export default new PlayerEvent(
   async (queue: Queue, playlist: Playlist) => {
     if (playlist.url) {
       try {
-        player.currentTextChannel?.send({
+        player.interactionData?.textChannel?.send({
           embeds: [await await Embeds.showAddedList(playlist)],
         });
       } catch (error) {

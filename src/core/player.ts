@@ -1,4 +1,4 @@
-import { GuildMember, TextBasedChannel, VoiceBasedChannel } from "discord.js";
+import { VoiceBasedChannel } from "discord.js";
 import DisTube, {
   DisTubeVoiceManager,
   GuildIdResolvable,
@@ -20,7 +20,7 @@ class ExtendedPlayer implements Player {
   private _previousSong: Song | null;
   private _playlistUpdated: boolean;
   private _currentQuery: string | null;
-  private _queueDeleteReason: QueueDeleteReason[];
+  private _queueDeleteReason: QueueDeleteReason;
   private _interactionData: InteractionData | null;
 
   constructor(distube: DisTube) {
@@ -31,7 +31,7 @@ class ExtendedPlayer implements Player {
     this._previousSong = null;
     this._playlistUpdated = false;
     this._currentQuery = null;
-    this._queueDeleteReason = [QueueDeleteReason.none];
+    this._queueDeleteReason = QueueDeleteReason.none;
     this._interactionData = null;
   }
 
@@ -60,7 +60,7 @@ class ExtendedPlayer implements Player {
   }
 
   //Getting queue delete reason
-  get queueDeleteReason(): QueueDeleteReason[] {
+  get queueDeleteReason(): QueueDeleteReason {
     return this._queueDeleteReason;
   }
 
@@ -68,9 +68,13 @@ class ExtendedPlayer implements Player {
     return this._interactionData;
   }
 
+  get distube(): DisTube {
+    return this._distube;
+  }
+
   //Set queue delete reason
-  set queueDeleteReason(reason: QueueDeleteReason[]) {
-    this.queueDeleteReason.push(...reason);
+  set queueDeleteReason(reason: QueueDeleteReason) {
+    this.queueDeleteReason = reason;
   }
 
   //Updating state of [_playlistUpdated]
@@ -106,19 +110,25 @@ class ExtendedPlayer implements Player {
   }
 
   //Plays a query(link|text) or playlist
-  async play(query: string | Playlist, data: InteractionData) {
-    let channel: VoiceBasedChannel = data.member.voice
-      .channel as VoiceBasedChannel;
-    this._currentQuery = typeof query === "string" ? query : null;
+  async play(query: string | Playlist, data: InteractionData): Promise<void> {
+    try {
+      let channel: VoiceBasedChannel = data.member.voice
+        .channel as VoiceBasedChannel;
+      this._currentQuery = typeof query === "string" ? query : null;
+      this._interactionData = data;
+      await this._distube.play(channel, query);
 
-    await this._distube.play(channel, query);
-    const queue: Queue = this._distube.getQueue(data.guild) as Queue;
+      const queue: Queue = this._distube.getQueue(data.guild) as Queue;
 
-    if (this._songs.length < 1) this._currentSong = queue.songs[0];
+      if (this._songs.length < 1) this._currentSong = queue.songs[0];
 
-    if (typeof query === "string") {
-      this._songs = Helper.removeDuplicates([...queue.songs] as []);
-      queue.songs = [...this._songs];
+      if (typeof query === "string") {
+        this._songs = Helper.removeDuplicates([...queue.songs] as []);
+        queue.songs = [...this._songs];
+      }
+      return;
+    } catch (error) {
+      console.log(`Error: Play(): ErrorDetails: ${error}`);
     }
   }
 
@@ -147,7 +157,7 @@ class ExtendedPlayer implements Player {
       if (queue) {
         await this.deleteQueue(data.guild);
       }
-      this._queueDeleteReason.push(QueueDeleteReason.clearingQueue);
+      this._queueDeleteReason = QueueDeleteReason.clearingQueue;
       this._songs = [];
       this._currentSong = null;
     } catch (error) {
@@ -170,7 +180,7 @@ class ExtendedPlayer implements Player {
 
   //Jumps to a song in queue
   async jump(position: number, data: InteractionData): Promise<void> {
-    this._queueDeleteReason.push(QueueDeleteReason.jumpedSongs);
+    this._queueDeleteReason = QueueDeleteReason.jumpedSongs;
     this._interactionData = data;
 
     if (await this.deleteQueue(data.guild)) {
@@ -179,20 +189,22 @@ class ExtendedPlayer implements Player {
       this._currentSong = tempSongs[0];
 
       let playlist: Playlist = new Playlist(tempSongs, { member: data.member });
-      await this.play(playlist, data);
+      return await this.play(playlist, data);
     } else {
       throw "No queue found!";
     }
   }
 
   //Moves a song on the queue
-  move(from: number, to: number, data: InteractionData): void {
-    this._queueDeleteReason.push(QueueDeleteReason.movedSongs);
+  move(from: number, to: number, data: InteractionData): Song {
+    this._queueDeleteReason = QueueDeleteReason.movedSongs;
     this._interactionData = data;
 
     const tempSong: Song = this._songs.splice(from, 1)[0];
     this._songs.splice(to, 0, tempSong);
     this._playlistUpdated = true;
+
+    return tempSong;
   }
 
   //Goes to the next song on queue
@@ -265,6 +277,28 @@ class ExtendedPlayer implements Player {
     this._interactionData = data;
 
     queue.setFilter(state === true ? "subboost" : false);
+  }
+
+  //Updates the playlist [queue.deleted event]
+  async updatePlaylist(data: InteractionData): Promise<void> {
+    this._queueDeleteReason = QueueDeleteReason.none;
+
+    let currentSongIndex: number = Helper.getCurrentSongIndex(
+      player.currentSong,
+      [...player.songs]
+    );
+
+    if (currentSongIndex < 0) {
+      throw "Failed to update playlist";
+    }
+
+    let tempSongs: Song[] = [...this._songs];
+    tempSongs.splice(0, currentSongIndex + 1);
+    this._currentSong = tempSongs[0];
+
+    let playlist: Playlist = new Playlist(tempSongs, { member: data.member });
+
+    await this.play(playlist, data);
   }
 }
 

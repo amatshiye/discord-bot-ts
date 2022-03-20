@@ -1,8 +1,12 @@
-import { GuildMember } from "discord.js";
-import { GuildIdResolvable } from "distube";
-import { type } from "os";
+import { Song } from "distube";
+import { player } from "../../core/player";
+import Colors from "../../helpers/colors";
+import Embeds from "../../helpers/embeds";
 import { Command } from "../../structures/command";
-import { InteractionData } from "../../typings/interaction-data";
+import {
+  createDataInteraction,
+  InteractionData,
+} from "../../typings/interaction-data";
 
 export default new Command({
   name: "move",
@@ -23,18 +27,29 @@ export default new Command({
   ],
   run: async ({ interaction, args }) => {
     try {
-      let from: number = Number(args.data[0].value);
-      let to: number = Number(args.data[1].value);
+      let from: number = Number(args.data[0].value) - 1;
+      let to: number = Number(args.data[1].value) - 1;
 
-      let interactionData: InteractionData = {
-        guild: interaction.guild as GuildIdResolvable,
-        textChannel: interaction.channel,
-        member: interaction.member,
-      };
+      let interactionData: InteractionData = createDataInteraction(interaction);
+      let movedSong: Song = player.move(from, to, interactionData);
+
+      interaction.followUp({
+        embeds: [
+          Embeds.createSimpleEmbed(
+            `Moved: 🎶 \`${movedSong.name}\`  from: \`(${
+              from + 1
+            })\` ➡ to: \`(${to + 1})\``,
+            Colors.success
+          ),
+        ],
+      });
     } catch (error) {
+      interaction.followUp({
+        embeds: [
+          Embeds.createSimpleEmbed("❌ Failed to move songs.", Colors.error),
+        ],
+      });
       console.log(`Error: Move Command: ${error}`);
     }
-
-    interaction.followUp("Move function");
   },
 });

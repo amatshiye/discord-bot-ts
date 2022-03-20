@@ -3,8 +3,10 @@ import Embeds from "../../helpers/embeds";
 import Helper from "../../helpers/helper";
 import { Command } from "../../structures/command";
 import { player } from "../../core/player";
-import { GuildIdResolvable } from "distube";
-import { InteractionData } from "../../typings/interaction-data";
+import {
+  createDataInteraction,
+  InteractionData,
+} from "../../typings/interaction-data";
 
 export default new Command({
   name: "skip",
@@ -12,11 +14,7 @@ export default new Command({
   run: async ({ interaction }) => {
     if (!Helper.isUserInVC(interaction)) return;
 
-    let interactionData: InteractionData = {
-      guild: interaction.guild as GuildIdResolvable,
-      textChannel: interaction.channel,
-      member: interaction.member,
-    };
+    let interactionData: InteractionData = createDataInteraction(interaction);
 
     try {
       if (!(await player.skip(interactionData))) {
