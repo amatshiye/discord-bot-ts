@@ -9,7 +9,6 @@ export interface Player {
   get playlistUpdated(): boolean;
   get interactionData(): InteractionData | null;
   set playlistUpdated(state: boolean);
-  set updateCurrentSong(song: Song);
   set updatePreviousSong(song: Song);
 
   joinChannel(data: InteractionData): void;

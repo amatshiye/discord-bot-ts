@@ -16,7 +16,6 @@ class ExtendedPlayer implements Player {
   private _distube: DisTube;
   private _voiceManager: DisTubeVoiceManager;
   private _songs: Song[];
-  private _currentSong: Song | null;
   private _previousSong: Song | null;
   private _playlistUpdated: boolean;
   private _currentQuery: string | null;
@@ -27,7 +26,6 @@ class ExtendedPlayer implements Player {
     this._distube = distube;
     this._voiceManager = this._distube.voices;
     this._songs = [];
-    this._currentSong = null;
     this._previousSong = null;
     this._playlistUpdated = false;
     this._currentQuery = null;
@@ -47,7 +45,12 @@ class ExtendedPlayer implements Player {
 
   //Getting current song
   get currentSong(): Song | null {
-    return this._currentSong;
+    let queue = this._distube.getQueue(
+      this.interactionData?.guild as GuildIdResolvable
+    );
+
+    if (queue) return queue.songs[0];
+    return null;
   }
 
   get previousSong(): Song | null {
@@ -82,11 +85,6 @@ class ExtendedPlayer implements Player {
     this._playlistUpdated = state;
   }
 
-  //Set current playing song
-  set updateCurrentSong(song: Song) {
-    this._currentSong = song;
-  }
-
   set updatePreviousSong(song: Song) {
     this._previousSong = song;
   }
@@ -119,8 +117,6 @@ class ExtendedPlayer implements Player {
       await this._distube.play(channel, query);
 
       const queue: Queue = this._distube.getQueue(data.guild) as Queue;
-
-      if (this._songs.length < 1) this._currentSong = queue.songs[0];
 
       if (typeof query === "string") {
         this._songs = Helper.removeDuplicates([...queue.songs] as []);
@@ -159,7 +155,6 @@ class ExtendedPlayer implements Player {
       }
       this._queueDeleteReason = QueueDeleteReason.clearingQueue;
       this._songs = [];
-      this._currentSong = null;
     } catch (error) {
       throw "Failed to clear queue";
     }
@@ -186,7 +181,6 @@ class ExtendedPlayer implements Player {
     if (await this.deleteQueue(data.guild)) {
       let tempSongs: Song[] = [...this._songs];
       tempSongs.splice(0, position);
-      this._currentSong = tempSongs[0];
 
       let playlist: Playlist = new Playlist(tempSongs, { member: data.member });
       return await this.play(playlist, data);
@@ -294,7 +288,6 @@ class ExtendedPlayer implements Player {
 
     let tempSongs: Song[] = [...this._songs];
     tempSongs.splice(0, currentSongIndex + 1);
-    this._currentSong = tempSongs[0];
 
     let playlist: Playlist = new Playlist(tempSongs, { member: data.member });
 

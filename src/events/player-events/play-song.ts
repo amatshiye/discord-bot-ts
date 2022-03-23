@@ -10,7 +10,6 @@ export default new PlayerEvent("playSong", async (queue: Queue, song: Song) => {
       player.interactionData?.textChannel;
     let songDurationInMilliseconds = song.duration * 1000;
 
-    player.updateCurrentSong = song;
     return textChannel
       ?.send({ embeds: [Embeds.currentSongEmbed(song)] })
       .then((message) => {

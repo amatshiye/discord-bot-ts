@@ -10,12 +10,12 @@ import {
 } from "../../typings/interaction-data";
 
 export default new Command({
-  name: "jump",
-  description: "Jumps to the specified track number",
+  name: "rewind",
+  description: "rewinds the song",
   options: [
     {
-      name: "track",
-      description: "Track number you want to jump to.",
+      name: "seconds",
+      description: "number of seconds",
       required: true,
       type: "INTEGER",
     },
@@ -23,17 +23,17 @@ export default new Command({
   run: async ({ interaction, args }) => {
     try {
       if (!Helper.isUserInVC(interaction)) return;
+      let seconds: number = args.data[0].value as number;
 
-      let option: string = args.data[0].value as string;
-      let trackNumber: number = Number(option) - 1;
       let interactionData: InteractionData = createDataInteraction(interaction);
 
-      await player.jump(trackNumber, interactionData);
-      interaction
+      await player.rewind(interactionData, seconds);
+
+      return interaction
         .followUp({
           embeds: [
             Embeds.createSimpleEmbed(
-              `Jumped to ${player.songs[trackNumber].name} ✅`,
+              `Rewind: ${seconds} seconds`,
               Colors.success
             ),
           ],
@@ -44,19 +44,16 @@ export default new Command({
               console.log("Message to delete: ", message);
               (message as Message).delete();
             } catch (error) {
-              console.log("Failed to delete queue updated message.");
+              console.log("Failed to delete rewind message");
             }
-          }, 10000);
+          }, 5000);
         });
     } catch (error) {
-      console.log(`Error: Jump Command: ${error}`);
+      console.log(`Error: Rewind Command: ${error}`);
       return interaction
         .followUp({
           embeds: [
-            Embeds.createSimpleEmbed(
-              "Failed to execute jump command ❌",
-              Colors.error
-            ),
+            Embeds.createSimpleEmbed(`Failed to execute rewind command ❌`, Colors.error),
           ],
         })
         .then((message) => {
@@ -65,9 +62,9 @@ export default new Command({
               console.log("Message to delete: ", message);
               (message as Message).delete();
             } catch (error) {
-              console.log("Failed to delete queue updated message.");
+              console.log("Failed to delete rewind message.");
             }
-          }, 10000);
+          }, 5000);
         });
     }
   },
